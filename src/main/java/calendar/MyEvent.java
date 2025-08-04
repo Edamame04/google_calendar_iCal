@@ -5,7 +5,7 @@
 
 package calendar;
 
-public class MyEvent {
+public class MyEvent implements CalendarEvent {
     // Fields for the MyEvent class
     private String uid;
     private String summary;

@@ -9,6 +9,7 @@
 package utils;
 
 // Imports Google Calendar API classes and Java time/date utilities
+import calendar.CalendarEvent;
 import calendar.MyEvent;
 import com.google.api.services.calendar.model.Event;
 import com.google.api.services.calendar.model.EventAttendee;
@@ -23,14 +24,14 @@ import java.util.Date;
 public class EventConverter {
 
     /**
-     * Converts a Google Calendar Event object to a MyEvent object.
+     * Converts a Google Calendar Event object to a CalendarEvent object.
      * Made static because EventConverter is stateless and used as a utility class.
      * This avoids unnecessary instantiation and follows common Java best practices for utility classes.
      *
      * @param googleEvent The Google Calendar Event to convert
-     * @return MyEvent instance with mapped fields
+     * @return CalendarEvent instance with mapped fields
      */
-    public static MyEvent convert(Event googleEvent) {
+    public static CalendarEvent convert(Event googleEvent) {
         // Extracts basic event details
         String uid = googleEvent.getId();
         String summary = googleEvent.getSummary();
