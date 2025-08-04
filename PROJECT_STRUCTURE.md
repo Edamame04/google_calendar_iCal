@@ -21,8 +21,9 @@ google_calendar_iCal/
 │       ├── EventConverter.java      # Event conversion logic
 │       ├── EventFactory.java       # Factory pattern for event creation
 │       └── InputValidator.java      # Input validation utilities
-└── src/main/resources/
-    └── credentials.json             # Google API credentials
+├── src/main/resources/
+│  └── credentials.json             # Google API credentials
+└── tokens                          # Token storage for Google API
 ```
 
 ## Object-Oriented Design Patterns Implemented
