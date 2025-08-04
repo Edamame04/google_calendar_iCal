@@ -10,57 +10,225 @@ package utils;
 
 // Imports Google Calendar API classes and Java time/date utilities
 import calendar.CalendarEvent;
-import calendar.MyEvent;
+import calendar.MyEventBuilder;
+import com.google.api.client.util.DateTime;
 import com.google.api.services.calendar.model.Event;
 import com.google.api.services.calendar.model.EventAttendee;
-import com.google.api.client.util.DateTime;
+import com.google.api.services.calendar.model.EventDateTime;
+import com.google.api.services.calendar.model.EventReminder;
 
-// Imports Java time classes for date and time manipulation
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.Date;
+import java.util.ArrayList;
+import java.util.List;
 
-// Converts a Google Calendar Event to a custom MyEvent object
+/**
+ * Utility class for converting between different event formats.
+ * Handles conversion from Google Calendar Event objects to CalendarEvent objects
+ * with mapping of all commonly used iCal fields.
+ */
 public class EventConverter {
 
     /**
      * Converts a Google Calendar Event object to a CalendarEvent object.
-     * Made static because EventConverter is stateless and used as a utility class.
-     * This avoids unnecessary instantiation and follows common Java best practices for utility classes.
+     * Maps all available Google Calendar fields to corresponding iCal fields.
      *
-     * @param googleEvent The Google Calendar Event to convert
+     * @param googleEvent Google Calendar Event to convert
      * @return CalendarEvent instance with mapped fields
      */
     public static CalendarEvent convert(Event googleEvent) {
-        // Extracts basic event details
-        String uid = googleEvent.getId();
-        String summary = googleEvent.getSummary();
-        String description = googleEvent.getDescription();
-        String location = googleEvent.getLocation();
-        // Gets organizer's email if available
-        String organizer = googleEvent.getOrganizer() != null ? googleEvent.getOrganizer().getEmail() : null;
-        // Collects attendee emails
-        java.util.List<String> attendees = new java.util.ArrayList<>();
-        if (googleEvent.getAttendees() != null) {
-            for (EventAttendee attendee : googleEvent.getAttendees()) {
-                attendees.add(attendee.getEmail());
+        if (googleEvent == null) {
+            return null;
+        }
+
+        MyEventBuilder builder = new MyEventBuilder();
+
+        // Basic identification
+        builder.setUid(googleEvent.getId())
+               .setSummary(googleEvent.getSummary())
+               .setDescription(googleEvent.getDescription())
+               .setLocation(googleEvent.getLocation());
+
+        // Date and time conversion
+        if (googleEvent.getStart() != null) {
+            LocalDateTime startTime = convertEventDateTime(googleEvent.getStart());
+            builder.setStart(startTime);
+        }
+
+        if (googleEvent.getEnd() != null) {
+            LocalDateTime endTime = convertEventDateTime(googleEvent.getEnd());
+            builder.setEnd(endTime);
+        }
+
+        if (googleEvent.getCreated() != null) {
+            LocalDateTime created = convertDateTime(googleEvent.getCreated());
+            builder.setCreated(created);
+        }
+
+        if (googleEvent.getUpdated() != null) {
+            LocalDateTime updated = convertDateTime(googleEvent.getUpdated());
+            builder.setLastModified(updated);
+        }
+
+        // Organizer information
+        if (googleEvent.getOrganizer() != null) {
+            String organizerEmail = googleEvent.getOrganizer().getEmail();
+            String organizerName = googleEvent.getOrganizer().getDisplayName();
+            if (organizerEmail != null) {
+                String organizer = organizerName != null ?
+                    "CN=" + organizerName + ":MAILTO:" + organizerEmail :
+                    "MAILTO:" + organizerEmail;
+                builder.setOrganizer(organizer);
             }
         }
 
-        // Handles start and end times (all-day or timed events)
-        DateTime startTime = googleEvent.getStart().getDateTime();
-        DateTime endTime = googleEvent.getEnd().getDateTime();
-        if (startTime == null) {
-            startTime = googleEvent.getStart().getDate(); // all-day event
-        }
-        if (endTime == null) {
-            endTime = googleEvent.getEnd().getDate(); // all-day event
-        }
-        // Converts DateTime to LocalDateTime using system default timezone
-        LocalDateTime start = LocalDateTime.ofInstant(new Date(startTime.getValue()).toInstant(), ZoneId.systemDefault());
-        LocalDateTime end = LocalDateTime.ofInstant(new Date(endTime.getValue()).toInstant(), ZoneId.systemDefault());
+        // Attendees
+        if (googleEvent.getAttendees() != null) {
+            List<String> attendees = new ArrayList<>();
+            for (EventAttendee attendee : googleEvent.getAttendees()) {
+                if (attendee.getEmail() != null) {
+                    String attendeeStr = attendee.getDisplayName() != null ?
+                        "CN=" + attendee.getDisplayName() + ":MAILTO:" + attendee.getEmail() :
+                        "MAILTO:" + attendee.getEmail();
 
-        // Returns a new MyEvent object with all mapped fields
-        return new MyEvent(uid, summary, description, location, start, end, organizer, attendees);
+                    // Add response status if available
+                    if (attendee.getResponseStatus() != null) {
+                        attendeeStr += ";PARTSTAT=" + convertResponseStatus(attendee.getResponseStatus());
+                    }
+
+                    attendees.add(attendeeStr);
+                }
+            }
+            builder.setAttendees(attendees);
+        }
+
+        // Event status
+        if (googleEvent.getStatus() != null) {
+            builder.setStatus(convertStatus(googleEvent.getStatus()));
+        }
+
+        // Transparency/visibility
+        if (googleEvent.getTransparency() != null) {
+            builder.setTransparency(googleEvent.getTransparency().toUpperCase());
+        }
+
+        // Classification/visibility
+        if (googleEvent.getVisibility() != null) {
+            builder.setClassification(convertVisibility(googleEvent.getVisibility()));
+        }
+
+        // URL/HTML link
+        if (googleEvent.getHtmlLink() != null) {
+            builder.setUrl(googleEvent.getHtmlLink());
+        }
+
+        // Recurrence rules
+        if (googleEvent.getRecurrence() != null && !googleEvent.getRecurrence().isEmpty()) {
+            // Google Calendar stores recurrence as a list of strings
+            // We'll take the first RRULE if available
+            for (String recRule : googleEvent.getRecurrence()) {
+                if (recRule.startsWith("RRULE:")) {
+                    builder.setRecurrenceRule(recRule.substring(6)); // Remove "RRULE:" prefix
+                    break;
+                }
+            }
+        }
+
+        // Set some default values for iCal compliance
+        if (googleEvent.getStatus() == null) {
+            builder.setStatusConfirmed();
+        }
+
+        // Add reminder/alarm from Google Calendar reminders
+        if (googleEvent.getReminders() != null &&
+            googleEvent.getReminders().getOverrides() != null &&
+            !googleEvent.getReminders().getOverrides().isEmpty()) {
+
+            // Take the first popup reminder
+            for (EventReminder reminder : googleEvent.getReminders().getOverrides()) {
+                if ("popup".equals(reminder.getMethod())) {
+                    builder.setAlarmMinutesBefore(reminder.getMinutes());
+                    break;
+                }
+            }
+        }
+
+        return builder.build();
+    }
+
+    /**
+     * Converts Google Calendar EventDateTime to LocalDateTime
+     */
+    private static LocalDateTime convertEventDateTime(EventDateTime eventDateTime) {
+        if (eventDateTime == null) return null;
+
+        DateTime dateTime = eventDateTime.getDateTime();
+        if (dateTime == null) {
+            dateTime = eventDateTime.getDate();
+        }
+
+        return convertDateTime(dateTime);
+    }
+
+    /**
+     * Converts Google Calendar DateTime to LocalDateTime
+     */
+    private static LocalDateTime convertDateTime(DateTime dateTime) {
+        if (dateTime == null) return null;
+
+        return LocalDateTime.ofInstant(
+            java.time.Instant.ofEpochMilli(dateTime.getValue()),
+            ZoneId.systemDefault()
+        );
+    }
+
+    /**
+     * Converts Google Calendar status to iCal status
+     */
+    private static String convertStatus(String googleStatus) {
+        switch (googleStatus.toLowerCase()) {
+            case "confirmed":
+                return "CONFIRMED";
+            case "tentative":
+                return "TENTATIVE";
+            case "cancelled":
+                return "CANCELLED";
+            default:
+                return "CONFIRMED";
+        }
+    }
+
+    /**
+     * Converts Google Calendar response status to iCal participation status
+     */
+    private static String convertResponseStatus(String responseStatus) {
+        switch (responseStatus.toLowerCase()) {
+            case "accepted":
+                return "ACCEPTED";
+            case "declined":
+                return "DECLINED";
+            case "tentative":
+                return "TENTATIVE";
+            case "needsaction":
+                return "NEEDS-ACTION";
+            default:
+                return "NEEDS-ACTION";
+        }
+    }
+
+    /**
+     * Converts Google Calendar visibility to iCal classification
+     */
+    private static String convertVisibility(String visibility) {
+        switch (visibility.toLowerCase()) {
+            case "public":
+                return "PUBLIC";
+            case "private":
+                return "PRIVATE";
+            case "confidential":
+                return "CONFIDENTIAL";
+            default:
+                return "PUBLIC";
+        }
     }
 }
