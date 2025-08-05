@@ -21,10 +21,14 @@ public class InputValidator {
      * Validates a calendar index input against the available calendars list.
      *
      * @param calendarIndexStr the calendar index as a string
-     * @param calendars the list of available calendars
      * @return ValidationResult containing validation status and error message if invalid
      */
-    public static ValidationResult validateCalendarIndex(String calendarIndexStr, List<CalendarListEntry> calendars) {
+    public static ValidationResult validateCalendarIndex(String calendarIndexStr , List<CalendarListEntry> calendars) {
+        // If no calendars are available, return an error
+        if (calendars == null || calendars.isEmpty()) {
+            return new ValidationResult(false, "No available calendars found. Please add a calendar first.");
+        }
+
         // Check if input is null or empty
         if (calendarIndexStr == null || calendarIndexStr.trim().isEmpty()) {
             return new ValidationResult(false, "Calendar index cannot be empty");
@@ -168,7 +172,7 @@ public class InputValidator {
             }
         }
 
-        // Check for reserved names (Windows)
+        // Check for reserved names (for Windows)
         String[] reservedNames = {"CON", "PRN", "AUX", "NUL", "COM1", "COM2", "COM3", "COM4",
                                  "COM5", "COM6", "COM7", "COM8", "COM9", "LPT1", "LPT2",
                                  "LPT3", "LPT4", "LPT5", "LPT6", "LPT7", "LPT8", "LPT9"};
@@ -241,6 +245,22 @@ public class InputValidator {
     }
 
     /**
+     * Gets the CalenderID from a CalendarListEntry by its index.
+     *
+     * @param calendarIndex the index of the calendar in the list
+     * @return the Calendar ID as a string, or null if index is invalid
+     */
+    public static String getCalendarIdByIndex(int calendarIndex, List<CalendarListEntry> calendars) {
+        // Check if index is valid
+        if (calendarIndex < 0 || calendarIndex >= calendars.size()) {
+            return null;
+        }
+
+        // Return the Calendar ID for the specified index
+        return calendars.get(calendarIndex).getId();
+    }
+
+    /**
      * Validates a calendar name input against the available calendars list.
      *
      * @param calendarName the calendar name as a string
@@ -273,7 +293,7 @@ public class InputValidator {
 
         return new ValidationResult(false,
             String.format("Calendar '%s' not found. Available calendars: %s",
-                         trimmedName, availableCalendars.toString()));
+                         trimmedName, availableCalendars));
     }
 
     /**

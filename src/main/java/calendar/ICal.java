@@ -1,10 +1,12 @@
-/** ICal.java
+/** calendar.ICal.java
  * This class represents an iCalendar (iCal) object that can store multiple events and export them in iCal format.
- * It supports adding events from Google Calendar and exporting to a file.
+ * It supports adding events from Google Calendar and exporting to a file. Multiple iCal objects can be created
+ * to represent different calendars or event sets.
  */
 
+package calendar;
+
 import utils.EventFactory;
-import calendar.CalendarEvent;
 import com.google.api.services.calendar.model.Event;
 import com.google.api.services.calendar.model.Events;
 import exceptions.ICalExportException;
@@ -16,7 +18,7 @@ import java.util.List;
 import java.util.ArrayList;
 
 /**
- * The ICal class provides functionality to store calendar events and export them in iCalendar (iCal) format.
+ * The calendar.ICal class provides functionality to store calendar events and export them in iCalendar (iCal) format.
  * It supports adding events from Google Calendar and exporting the iCal data to a file.
  */
 public class ICal {
@@ -72,6 +74,7 @@ public class ICal {
         }
         icalStringBuilder.append("END:VCALENDAR\r\n");
         return icalStringBuilder.toString(); // Return the complete iCal string
+        //TODO: Check if the iCal string is valid especially with the line endings
     }
     
     /**

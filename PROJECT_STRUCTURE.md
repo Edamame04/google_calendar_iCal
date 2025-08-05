@@ -8,8 +8,8 @@ A Java application that exports Google Calendar events to iCal format (.ics file
 ```
 google_calendar_iCal/
 ├── src/main/java/
-│   ├── ICal.java                    # Main iCal container class
-│   ├── MainCLI.java                 # Command-line interface
+│   ├── calendar.ICal.java                    # Main iCal container class
+│   ├── G2iCal.java                 # Command-line interface
 │   ├── calendar/                    # Domain objects package
 │   │   ├── CalendarEvent.java       # Event interface (abstraction)
 │   │   ├── MyEvent.java            # Concrete event implementation
@@ -55,7 +55,7 @@ google_calendar_iCal/
 
 ### Core Classes
 
-#### `ICal.java`
+#### `calendar.ICal.java`
 **Purpose**: Main container for iCalendar data and export functionality
 **Key Responsibilities**:
 - Store collection of CalendarEvent objects
@@ -70,7 +70,7 @@ public String getICalString()                     // Generate iCal format
 public boolean exportICalToFile(String, String)  // Export to file
 ```
 
-#### `MainCLI.java`
+#### `G2iCal.java`
 **Purpose**: Command-line interface and application entry point
 **Key Responsibilities**:
 - Parse command-line arguments
@@ -160,7 +160,7 @@ MyEvent event = new MyEventBuilder()
 - Each class has one clear purpose
 - EventConverter only handles conversion
 - InputValidator only handles validation
-- ICal only handles iCal operations
+- calendar.ICal only handles iCal operations
 
 ### 2. **Open/Closed Principle (OCP)**
 - CalendarEvent interface allows new event types without modifying existing code
@@ -168,7 +168,7 @@ MyEvent event = new MyEventBuilder()
 - Strategy pattern ready for different export formats
 
 ### 3. **Dependency Inversion Principle (DIP)**
-- ICal depends on CalendarEvent interface, not concrete MyEvent
+- calendar.ICal depends on CalendarEvent interface, not concrete MyEvent
 - EventFactory returns interfaces, not concrete classes
 - Easier testing with mock implementations
 
@@ -184,12 +184,12 @@ MyEvent event = new MyEventBuilder()
 ## Data Flow
 
 ```
-1. User Input → MainCLI
-2. MainCLI → CalendarApiConnector (fetch calendars)
-3. MainCLI → CalendarApiConnector (fetch events)
+1. User Input → G2iCal
+2. G2iCal → CalendarApiConnector (fetch calendars)
+3. G2iCal → CalendarApiConnector (fetch events)
 4. Google Events → EventFactory → CalendarEvent objects
-5. CalendarEvent objects → ICal container
-6. ICal → Generate iCal string → Export to file
+5. CalendarEvent objects → calendar.ICal container
+6. calendar.ICal → Generate iCal string → Export to file
 ```
 
 ## Extension Points
@@ -218,7 +218,7 @@ MyEvent event = new MyEventBuilder()
 ### Integration Testing:
 - CalendarApiConnector can be mocked for API testing
 - File export can be tested with temporary directories
-- End-to-end testing through MainCLI
+- End-to-end testing through G2iCal
 
 ## Benefits of Current Structure
 

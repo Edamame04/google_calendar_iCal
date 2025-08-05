@@ -1,4 +1,5 @@
-/** * MyEvent.java
+/**
+ * MyEvent.java
  * MyEvent represents a calendar event with all necessary fields for iCal export.
  * It stores event details such as UID, summary, description, location, start/end times, organizer, and attendees.
  */
@@ -102,70 +103,114 @@ public class MyEvent implements CalendarEvent {
 
     // Getters implementing CalendarEvent interface
     @Override
-    public String getUid() { return uid; }
+    public String getUid() {
+        return uid;
+    }
 
     @Override
-    public String getSummary() { return summary; }
+    public String getSummary() {
+        return summary;
+    }
 
     @Override
-    public String getDescription() { return description; }
+    public String getDescription() {
+        return description;
+    }
 
     @Override
-    public String getLocation() { return location; }
+    public String getLocation() {
+        return location;
+    }
 
     @Override
-    public LocalDateTime getStart() { return start; }
+    public LocalDateTime getStart() {
+        return start;
+    }
 
     @Override
-    public LocalDateTime getEnd() { return end; }
+    public LocalDateTime getEnd() {
+        return end;
+    }
 
     @Override
-    public LocalDateTime getCreated() { return created; }
+    public LocalDateTime getCreated() {
+        return created;
+    }
 
     @Override
-    public LocalDateTime getLastModified() { return lastModified; }
+    public LocalDateTime getLastModified() {
+        return lastModified;
+    }
 
     @Override
-    public String getOrganizer() { return organizer; }
+    public String getOrganizer() {
+        return organizer;
+    }
 
     @Override
-    public List<String> getAttendees() { return new ArrayList<>(attendees); }
+    public List<String> getAttendees() {
+        return new ArrayList<>(attendees);
+    }
 
     @Override
-    public String getStatus() { return status; }
+    public String getStatus() {
+        return status;
+    }
 
     @Override
-    public String getTransparency() { return transparency; }
+    public String getTransparency() {
+        return transparency;
+    }
 
     @Override
-    public String getClassification() { return classification; }
+    public String getClassification() {
+        return classification;
+    }
 
     @Override
-    public Integer getPriority() { return priority; }
+    public Integer getPriority() {
+        return priority;
+    }
 
     @Override
-    public String getRecurrenceRule() { return recurrenceRule; }
+    public String getRecurrenceRule() {
+        return recurrenceRule;
+    }
 
     @Override
-    public List<LocalDateTime> getRecurrenceDates() { return new ArrayList<>(recurrenceDates); }
+    public List<LocalDateTime> getRecurrenceDates() {
+        return new ArrayList<>(recurrenceDates);
+    }
 
     @Override
-    public List<LocalDateTime> getExceptionDates() { return new ArrayList<>(exceptionDates); }
+    public List<LocalDateTime> getExceptionDates() {
+        return new ArrayList<>(exceptionDates);
+    }
 
     @Override
-    public String getUrl() { return url; }
+    public String getUrl() {
+        return url;
+    }
 
     @Override
-    public List<String> getCategories() { return new ArrayList<>(categories); }
+    public List<String> getCategories() {
+        return new ArrayList<>(categories);
+    }
 
     @Override
-    public String getComment() { return comment; }
+    public String getComment() {
+        return comment;
+    }
 
     @Override
-    public String getContact() { return contact; }
+    public String getContact() {
+        return contact;
+    }
 
     @Override
-    public Integer getAlarmMinutesBefore() { return alarmMinutesBefore; }
+    public Integer getAlarmMinutesBefore() {
+        return alarmMinutesBefore;
+    }
 
     // Setters for mutable operations
     public void setSummary(String summary) {
@@ -297,13 +342,16 @@ public class MyEvent implements CalendarEvent {
 
     /**
      * Escapes special characters in text fields for iCal format
+     * This ensures that commas, semicolons, and newlines do not break the iCal format.
+     * @param text The text to escape
+     * @return Escaped text suitable for iCal format
      */
     private String escapeText(String text) {
         if (text == null) return "";
         return text.replace("\\", "\\\\")
-                   .replace(",", "\\,")
-                   .replace(";", "\\;")
-                   .replace("\n", "\\n")
-                   .replace("\r", "");
+                .replace(",", "\\,")
+                .replace(";", "\\;")
+                .replace("\n", "\\n")
+                .replace("\r", "");
     }
 }

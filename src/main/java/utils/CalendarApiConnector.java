@@ -1,4 +1,5 @@
-/** * utils.ApiConnector.java
+/**
+ * utils.ApiConnector.java
  * This class handles the connects to the Google Calendar API.
  * It handles authentication, calendar service initialization, and provides methods
  * to interact with the Google Calendar API.
@@ -8,6 +9,7 @@
 package utils;
 
 // Imports necessary Google Calendar API and Java libraries
+
 import com.google.api.client.auth.oauth2.Credential;
 import com.google.api.client.extensions.java6.auth.oauth2.AuthorizationCodeInstalledApp;
 import com.google.api.client.extensions.jetty.auth.oauth2.LocalServerReceiver;
@@ -40,82 +42,83 @@ import java.util.List;
  * providing a centralized point for accessing the Google Calendar service.
  */
 public class CalendarApiConnector {
-    
+
     // Singleton instance
     private static CalendarApiConnector instance;
-    
+
     //Application name for Google Calendar API.
-    private static final String APPLICATION_NAME = "Google Calendar ICal Exporter";
-    
+    private static final String APPLICATION_NAME = "G2iCal";
+
     // Global instance of the JSON factory for parsing JSON responses.
     private static final JsonFactory JSON_FACTORY = GsonFactory.getDefaultInstance();
-    
+
     // Directory path where authorization tokens are stored for persistence.
     private static final String TOKENS_DIRECTORY_PATH = "tokens";
 
     /*
      * Global instance of the scopes required by this application.
      * This set to read-only access to calendars because it only needs to read calendar data.
-     * * The scope defines the level of access the application has to the user's calendar data.
-     * If modifying these scopes, delete your previously saved tokens/ folder.
+     * The scope defines the level of access the application has to the user's calendar data.
+     * If modifying these scopes, delete tokens/ folder.
      */
     private static final List<String> SCOPES = Collections.singletonList(CalendarScopes.CALENDAR_READONLY);
-    
+
     //Path to the credentials file in the resources directory.
     private static final String CREDENTIALS_FILE_PATH = "/credentials.json";
-    
+
     // Instance variables
     private Calendar calendarService;
     private NetHttpTransport httpTransport;
-    
+
     /**
      * Private constructor to prevent direct instantiation.
-     * Initializes the HTTP transport and calendar service.
-     * 
-     * @throws IOException if there's an error with I/O operations
+     * Initializes the HTTP transport and calendar service -> view initializeService() method.
+     *
+     * @throws IOException              if there's an error with I/O operations
      * @throws GeneralSecurityException if there's a security-related error
      */
     private CalendarApiConnector() throws IOException, GeneralSecurityException {
         initializeService();
     }
-    
+
     /**
      * Returns the singleton instance of utils.ApiConnector.java
      * Creates a new instance if one doesn't exist.
      * The synchronized keyword ensures that only one thread can access this method at a time.
      * Even if I don't use it in a multithreaded environment, it is a good practice to ensure thread safety.
-     * 
+     *
      * @return the singleton instance of utils.ApiConnector
-     * @throws IOException if there's an error with I/O operations
+     * @throws IOException              if there's an error with I/O operations
      * @throws GeneralSecurityException if there's a security-related error
      */
     public static synchronized CalendarApiConnector getInstance() throws IOException, GeneralSecurityException {
-        if (instance == null) {
-            instance = new CalendarApiConnector();
-        }
+        if (instance == null) instance = new CalendarApiConnector();
         return instance;
     }
-    
+
     /**
      * Initializes the HTTP transport and Google Calendar service.
-     * This method sets up the authenticated connection to Google Calendar API.
      * This is called in the constructor to ensure the service is ready for use.
-     * 
-     * @throws IOException if there's an error with I/O operations
+     * It calls getCredentials() to obtain the user's credentials -> view getCredentials() method.
+     *
+     * @throws IOException              if there's an error with I/O operations
      * @throws GeneralSecurityException if there's a security-related error
      */
     private void initializeService() throws IOException, GeneralSecurityException {
         // Build a new trusted HTTP transport
         httpTransport = GoogleNetHttpTransport.newTrustedTransport();
-        
+
         // Create the Calendar service with authenticated credentials
         calendarService = new Calendar.Builder(httpTransport, JSON_FACTORY, getCredentials())
                 .setApplicationName(APPLICATION_NAME)
                 .build();
     }
-    
+
     /**
      * Creates an authorized Credential object for Google Calendar API access.
+     * The user will be prompted to authorize the application the first time it runs,
+     * and the credentials will be stored in the specified tokens directory for future use,
+     * so the user won't have to authorize again unless the credentials are deleted or the scopes change.
      * This method handles the OAuth2 flow for authentication.
      *
      * @return An authorized Credential object
@@ -127,7 +130,7 @@ public class CalendarApiConnector {
         if (in == null) {
             throw new FileNotFoundException("Credential object resource not found: " + CREDENTIALS_FILE_PATH);
         }
-        
+
         // Parse the client secrets from JSON
         GoogleClientSecrets clientSecrets = GoogleClientSecrets.load(JSON_FACTORY, new InputStreamReader(in));
 
@@ -137,10 +140,10 @@ public class CalendarApiConnector {
                 .setDataStoreFactory(new FileDataStoreFactory(new java.io.File(TOKENS_DIRECTORY_PATH)))
                 .setAccessType("offline") // Allows refresh tokens for long-term access
                 .build();
-        
+
         // Set up local server receiver for OAuth callback
         LocalServerReceiver receiver = new LocalServerReceiver.Builder().setPort(8888).build();
-        
+
         // Authorize the user and return the credential
         return new AuthorizationCodeInstalledApp(flow, receiver).authorize("user");
     }
@@ -152,7 +155,7 @@ public class CalendarApiConnector {
 
     /**
      * Retrieves a list of all calendars accessible to the authenticated user.
-     * 
+     *
      * @return List of CalendarListEntry objects representing user's calendars
      * @throws IOException if there's an error communicating with the API
      */
@@ -160,13 +163,13 @@ public class CalendarApiConnector {
         CalendarList calendarList = calendarService.calendarList().list().execute();
         return calendarList.getItems();
     }
-    
+
     /**
      * Retrieves events from a specified calendar within a time range.
      *
      * @param calendarId the ID of the calendar to retrieve events from
-     * @param startTime the start time for the event query range
-     * @param endTime the end time for the event query range
+     * @param startTime  the start time for the event query range
+     * @param endTime    the end time for the event query range
      * @return Events object containing the list of calendar events
      * @throws IOException if there's an error communicating with the API
      */
@@ -183,7 +186,7 @@ public class CalendarApiConnector {
      * Retrieves events from the primary calendar within a specified time range.
      *
      * @param startTime the start time for the event query range
-     * @param endTime the end time for the event query range
+     * @param endTime   the end time for the event query range
      * @return Events object containing the list of events from the primary calendar
      * @throws IOException if there's an error communicating with the API
      */
@@ -196,7 +199,7 @@ public class CalendarApiConnector {
      * This method aggregates events from all calendars accessible to the user.
      *
      * @param startTime the start time for the event query range
-     * @param endTime the end time for the event query range
+     * @param endTime   the end time for the event query range
      * @return Events object containing all events from all calendars
      * @throws IOException if there's an error communicating with the API
      */
