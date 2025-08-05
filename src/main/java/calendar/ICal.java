@@ -70,11 +70,43 @@ public class ICal {
         icalStringBuilder.append("VERSION:2.0\r\n");
         icalStringBuilder.append("PRODID:-//My Calendar iCal Exporter//EN\r\n");
         for (CalendarEvent event : events) {
-            icalStringBuilder.append(event.toICal()); // Convert CalendarEvent to iCal format
+            icalStringBuilder.append(event.toICal());
         }
         icalStringBuilder.append("END:VCALENDAR\r\n");
-        return icalStringBuilder.toString(); // Return the complete iCal string
-        //TODO: Check if the iCal string is valid especially with the line endings
+
+        return foldLines(icalStringBuilder.toString()); // Apply line folding
+    }
+
+    /**
+     * Folds long lines according to iCal specification (75 character limit).
+     *
+     * @param icalString The raw iCal string
+     * @return The iCal string with properly folded lines
+     */
+    private String foldLines(String icalString) {
+        StringBuilder result = new StringBuilder();
+        String[] lines = icalString.split("\r\n");
+
+        for (String line : lines) {
+            if (line.length() <= 75) {
+                result.append(line).append("\r\n");
+            } else {
+                // Fold long lines
+                result.append(line.substring(0, 75)).append("\r\n");
+                String remaining = line.substring(75);
+
+                while (remaining.length() > 74) { // 74 because we need space for leading space
+                    result.append(" ").append(remaining.substring(0, 74)).append("\r\n");
+                    remaining = remaining.substring(74);
+                }
+
+                if (!remaining.isEmpty()) {
+                    result.append(" ").append(remaining).append("\r\n");
+                }
+            }
+        }
+
+        return result.toString();
     }
     
     /**

@@ -19,7 +19,7 @@ import static java.lang.System.exit;
  * and converts the retrieved events to iCal format.
  */
 public class G2iCal {
-    static String EXPORT_FILE_PATH = "./"; // Default export path to the download directory
+    static String EXPORT_FILE_PATH = System.getProperty("user.home") + "/Downloads";
 
     /**
      * Main method that orchestrates the calendar selection and iCal generation process.
