@@ -103,25 +103,21 @@ public class InputValidator {
     /**
      * Validates that the start date is before or equal to the end date.
      *
-     * @param startDateStr the start date string
+     * @param startDateDT the start date string
      * @param endDateStr the end date string
      * @return ValidationResult containing validation status and error message if invalid
      */
-    public static ValidationResult validateDateRange(String startDateStr, String endDateStr) {
-        // First validate individual dates
-        ValidationResult startValidation = validateDate(startDateStr, "Start date");
-        if (!startValidation.isValid()) {
-            return startValidation;
-        }
-
+    public static ValidationResult validateDateRange(DateTime startDateDT, String endDateStr) {
+        // Validate end date
         ValidationResult endValidation = validateDate(endDateStr, "End date");
         if (!endValidation.isValid()) {
             return endValidation;
         }
 
         try {
-            // Parse both dates for comparison
-            LocalDate startDate = LocalDate.parse(startDateStr.trim(), DATE_FORMATTER);
+            // Parse end dates for comparison
+            String startDateStr = startDateDT.toStringRfc3339().substring(0, 10); // Extract YYYY-MM-DD part
+            LocalDate startDate = LocalDate.parse(startDateStr, DATE_FORMATTER);
             LocalDate endDate = LocalDate.parse(endDateStr.trim(), DATE_FORMATTER);
 
             // Check if start date is after end date

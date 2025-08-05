@@ -48,9 +48,10 @@ public class G2iCal {
 
         // Get the inputs for the calendar, start date, end date, and filename from the user
         DateTime startTime = getUserInputStartDate(args);
-        DateTime endTime = getUserInputEndDate(args);
+        DateTime endTime = getUserInputEndDate(startTime, args);
         String fileName = getUserInputFileName(args);
         String selectedCalendar = getUserInputCalendar(args);
+
 
         // Create the iCal object to hold the events and add the events to it
         System.out.println("\nFetching events from calendar: " + selectedCalendar);
@@ -114,25 +115,26 @@ public class G2iCal {
      * @param args command line arguments
      * @return DateTime object representing the end date
      */
-    private static DateTime getUserInputEndDate(String... args) {
+    private static DateTime getUserInputEndDate(DateTime startDate, String... args) {
         // Create a Scanner for user input
         Scanner scanner = new Scanner(System.in);
 
         // If start date is provided as an argument, use it directly
         if (args.length > 1) {
-            String startDate = args[1].trim();
-            InputValidator.ValidationResult result = InputValidator.validateDate(startDate, "end");
+            String endDate = args[1].trim();
+            InputValidator.ValidationResult result = InputValidator.validateDateRange(startDate, endDate);
             if (result.isValid()) {
-                return InputValidator.convertToDateTime(startDate, true);
+                return InputValidator.convertToDateTime(endDate, true);
             } else {
                 System.out.println("Error: " + result.getErrorMessage());
-                System.out.println("Please provide a valid start date.");
+                System.out.println("Please provide a valid end date.");
             }
         }
 
         // Prompt the user for a start date
-        return InputValidator.convertToDateTime(promptForValidInput(scanner, "Enter start date (YYYY-MM-DD): ",
-                dateStr -> InputValidator.validateDate(dateStr, "Start date")), true);
+        return InputValidator.convertToDateTime(promptForValidInput(scanner, "Enter end date (YYYY-MM-DD): ",
+                dateStr -> InputValidator.validateDateRange(startDate, dateStr)), true);
+
     }
 
 
